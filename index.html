@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Добавить сделку</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--tg-theme-bg-color, #fff);
+    color: var(--tg-theme-text-color, #000);
+    padding: 16px;
+    padding-bottom: 90px;
+  }
+  h2 { font-size: 18px; margin-bottom: 16px; }
+  label {
+    display: block;
+    font-size: 13px;
+    color: var(--tg-theme-hint-color, #888);
+    margin: 14px 0 4px;
+  }
+  input, select {
+    width: 100%;
+    font-size: 16px;
+    padding: 12px;
+    border: 1px solid var(--tg-theme-hint-color, #ccc);
+    border-radius: 10px;
+    background: var(--tg-theme-secondary-bg-color, #f5f5f5);
+    color: var(--tg-theme-text-color, #000);
+    outline: none;
+  }
+  input:focus, select:focus { border-color: var(--tg-theme-button-color, #2ea6ff); }
+  .cats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  .cat {
+    padding: 12px 8px;
+    border-radius: 10px;
+    border: 1px solid var(--tg-theme-hint-color, #ccc);
+    background: var(--tg-theme-secondary-bg-color, #f5f5f5);
+    color: var(--tg-theme-text-color, #000);
+    font-size: 14px;
+    text-align: center;
+    cursor: pointer;
+  }
+  .cat.active {
+    background: var(--tg-theme-button-color, #2ea6ff);
+    color: var(--tg-theme-button-text-color, #fff);
+    border-color: var(--tg-theme-button-color, #2ea6ff);
+  }
+  .hidden { display: none; }
+  .hint { font-size: 12px; color: var(--tg-theme-hint-color, #888); margin-top: 4px; }
+</style>
+</head>
+<body>
+  <h2>💼 Новая сделка</h2>
+
+  <label>Юрист</label>
+  <select id="jurist">
+    <option>Магомедов М.Я.</option>
+    <option>Магомедов М. Р.</option>
+    <option>Ахвердян Э.А.</option>
+    <option>Каспаров О.А.</option>
+    <option>Пикалова Е.С.</option>
+    <option>Васильченко В.В.</option>
+    <option>Жовтый А.А.</option>
+    <option>Елизавета Шевченко</option>
+  </select>
+
+  <label>Тип сделки</label>
+  <div class="cats" id="cats">
+    <div class="cat active" data-cat="court">⚖️ Суд (победа)</div>
+    <div class="cat" data-cat="sale">🤝 Продажа</div>
+    <div class="cat" data-cat="add_sale">➕ Доп. продажа</div>
+    <div class="cat" data-cat="gu">🏆 Гонорар успеха</div>
+    <div class="cat" data-cat="review">⭐ Отзыв</div>
+    <div class="cat" data-cat="expense">💸 Расход</div>
+  </div>
+
+  <label>Дата</label>
+  <input type="date" id="date">
+
+  <div id="f-client">
+    <label>Клиент (фамилия)</label>
+    <input type="text" id="client" placeholder="Кувшинова">
+  </div>
+
+  <div id="f-contract">
+    <label>Номер договора</label>
+    <input type="text" id="contract" placeholder="1507-01/25 (можно оставить пустым)">
+  </div>
+
+  <div id="f-condition" class="hidden">
+    <label>Условие ГУ</label>
+    <input type="text" id="condition" placeholder="Взыскание (необязательно)">
+  </div>
+
+  <div id="f-platform" class="hidden">
+    <label>Платформа отзыва</label>
+    <select id="platform">
+      <option>Яндекс</option><option>2гис</option><option>Yell</option>
+      <option>Отзовик</option><option>Авито</option><option>Zoon</option><option>Профи</option>
+    </select>
+  </div>
+
+  <div id="f-expense-type" class="hidden">
+    <label>Тип расхода</label>
+    <select id="expense_type">
+      <option>Почта</option><option>Госпошлина</option><option>Транспорт</option><option>Иные</option>
+    </select>
+  </div>
+
+  <div id="f-comment" class="hidden">
+    <label>Комментарий</label>
+    <input type="text" id="comment" placeholder="Отправка иска (необязательно)">
+  </div>
+
+  <label>Сумма, ₽</label>
+  <input type="number" id="amount" inputmode="numeric" placeholder="150000">
+  <div class="hint" id="amount-hint"></div>
+
+<script>
+  const tg = window.Telegram.WebApp;
+  tg.ready();
+  tg.expand();
+
+  document.getElementById('date').value = new Date().toISOString().slice(0, 10);
+
+  let category = 'court';
+  const show = (id, on) => document.getElementById(id).classList.toggle('hidden', !on);
+
+  function applyCategory(cat) {
+    category = cat;
+    document.querySelectorAll('.cat').forEach(el =>
+      el.classList.toggle('active', el.dataset.cat === cat));
+    show('f-client', cat !== 'expense');
+    show('f-contract', ['court', 'sale', 'add_sale'].includes(cat));
+    show('f-condition', cat === 'gu');
+    show('f-platform', cat === 'review');
+    show('f-expense-type', cat === 'expense');
+    show('f-comment', cat === 'expense');
+    const amount = document.getElementById('amount');
+    if (cat === 'review' && !amount.value) amount.value = 1000;
+    document.getElementById('amount-hint').textContent =
+      cat === 'review' ? 'Обычно 1000 ₽ за отзыв' : '';
+  }
+
+  document.getElementById('cats').addEventListener('click', e => {
+    if (e.target.dataset.cat) applyCategory(e.target.dataset.cat);
+  });
+
+  tg.MainButton.setText('✅ Сохранить сделку');
+  tg.MainButton.show();
+  tg.MainButton.onClick(() => {
+    const val = id => document.getElementById(id).value.trim();
+    const amount = parseInt(val('amount').replace(/\s/g, ''), 10);
+
+    if (category !== 'expense' && !val('client')) {
+      tg.showAlert('Укажите фамилию клиента'); return;
+    }
+    if (!amount || amount <= 0) {
+      tg.showAlert('Укажите сумму'); return;
+    }
+
+    tg.sendData(JSON.stringify({
+      kind: 'deal',
+      jurist: val('jurist'),
+      category: category,
+      date: val('date'),
+      client: val('client'),
+      contract: val('contract'),
+      condition: category === 'expense' ? val('expense_type') : val('condition'),
+      platform: category === 'review' ? val('platform') : '',
+      comment: val('comment'),
+      amount: amount,
+    }));
+  });
+</script>
+</body>
+</html>

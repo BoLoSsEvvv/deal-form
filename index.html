@@ -2,75 +2,124 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Добавить сделку</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Отчёты и сделки</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: var(--tg-theme-bg-color, #fff);
+    --text: var(--tg-theme-text-color, #111);
+    --hint: var(--tg-theme-hint-color, #8a8a8e);
+    --card: var(--tg-theme-secondary-bg-color, #f2f2f7);
+    --accent: var(--tg-theme-button-color, #2ea6ff);
+    --accent-text: var(--tg-theme-button-text-color, #fff);
+    --border: color-mix(in srgb, var(--hint) 35%, transparent);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
   body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    background: var(--tg-theme-bg-color, #fff);
-    color: var(--tg-theme-text-color, #000);
-    padding: 16px;
-    padding-bottom: 90px;
+    background: var(--bg); color: var(--text);
+    padding: 12px 14px 96px;
   }
-  h2 { font-size: 18px; margin-bottom: 16px; }
-  label {
-    display: block;
-    font-size: 13px;
-    color: var(--tg-theme-hint-color, #888);
-    margin: 14px 0 4px;
+
+  /* Вкладки */
+  .tabs {
+    display: flex; gap: 6px; padding: 4px;
+    background: var(--card); border-radius: 14px;
+    position: sticky; top: 8px; z-index: 10; margin-bottom: 14px;
   }
+  .tab {
+    flex: 1; text-align: center; padding: 10px 4px;
+    font-size: 14px; font-weight: 600; border-radius: 11px;
+    color: var(--hint); cursor: pointer; user-select: none;
+    transition: background .15s, color .15s;
+  }
+  .tab.active { background: var(--accent); color: var(--accent-text); }
+  .page { display: none; }
+  .page.active { display: block; animation: fade .18s ease; }
+  @keyframes fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; } }
+
+  /* Элементы форм */
+  label { display: block; font-size: 12px; color: var(--hint); margin: 12px 0 5px; font-weight: 500; }
   input, select {
-    width: 100%;
-    font-size: 16px;
-    padding: 12px;
-    border: 1px solid var(--tg-theme-hint-color, #ccc);
-    border-radius: 10px;
-    background: var(--tg-theme-secondary-bg-color, #f5f5f5);
-    color: var(--tg-theme-text-color, #000);
-    outline: none;
+    width: 100%; font-size: 16px; padding: 12px;
+    border: 1px solid var(--border); border-radius: 12px;
+    background: var(--card); color: var(--text); outline: none;
+    appearance: none; -webkit-appearance: none;
   }
-  input:focus, select:focus { border-color: var(--tg-theme-button-color, #2ea6ff); }
-  .cats {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    margin-bottom: 6px;
+  input:focus, select:focus { border-color: var(--accent); }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+  .hidden { display: none !important; }
+  .hint { font-size: 12px; color: var(--hint); margin-top: 5px; }
+
+  /* Карточки-секции */
+  details.card {
+    background: var(--card); border-radius: 16px;
+    padding: 0 14px; margin-bottom: 10px; overflow: hidden;
   }
+  details.card summary {
+    list-style: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 0; font-size: 15px; font-weight: 600;
+  }
+  details.card summary::-webkit-details-marker { display: none; }
+  details.card summary .chev { color: var(--hint); transition: transform .2s; font-size: 13px; }
+  details.card[open] summary .chev { transform: rotate(90deg); }
+  details.card .body { padding-bottom: 16px; }
+  details.card input, details.card select { background: var(--bg); }
+  .badge {
+    font-size: 12px; font-weight: 500; color: var(--hint);
+    margin-left: auto; margin-right: 10px;
+  }
+
+  /* Плитки категорий сделки */
+  .cats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .cat {
-    padding: 12px 8px;
-    border-radius: 10px;
-    border: 1px solid var(--tg-theme-hint-color, #ccc);
-    background: var(--tg-theme-secondary-bg-color, #f5f5f5);
-    color: var(--tg-theme-text-color, #000);
-    font-size: 14px;
-    text-align: center;
-    cursor: pointer;
+    padding: 13px 8px; border-radius: 12px;
+    border: 1px solid var(--border); background: var(--card);
+    font-size: 14px; font-weight: 500; text-align: center; cursor: pointer;
   }
-  .cat.active {
-    background: var(--tg-theme-button-color, #2ea6ff);
-    color: var(--tg-theme-button-text-color, #fff);
-    border-color: var(--tg-theme-button-color, #2ea6ff);
+  .cat.active { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
+
+  /* Быстрые чипы */
+  .chips { display: flex; gap: 8px; margin-bottom: 8px; }
+  .chip {
+    padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: 500;
+    background: var(--card); border: 1px solid var(--border); cursor: pointer;
   }
-  .hidden { display: none; }
-  .hint { font-size: 12px; color: var(--tg-theme-hint-color, #888); margin-top: 4px; }
+  .chip.active { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
+
+  /* Админ-карточки */
+  .admin-card {
+    background: var(--card); border-radius: 16px;
+    padding: 16px 14px; margin-bottom: 12px;
+  }
+  .admin-card h3 { font-size: 15px; margin-bottom: 4px; }
+  .admin-card p { font-size: 12px; color: var(--hint); }
+  .admin-card input, .admin-card select { background: var(--bg); }
+  .btn {
+    width: 100%; margin-top: 12px; padding: 13px;
+    background: var(--accent); color: var(--accent-text);
+    font-size: 15px; font-weight: 600;
+    border: none; border-radius: 12px; cursor: pointer;
+  }
+  .btn.danger { background: #d9534f; color: #fff; }
+  .no-access { text-align: center; color: var(--hint); padding: 40px 20px; font-size: 14px; }
 </style>
 </head>
 <body>
-  <h2>💼 Новая сделка</h2>
 
+<div class="tabs" id="tabs">
+  <div class="tab active" data-page="deal">💼 Сделка</div>
+  <div class="tab" data-page="report">📊 Отчёт</div>
+  <div class="tab hidden" data-page="admin" id="admin-tab">⚙️ Админ</div>
+</div>
+
+<!-- ============ СДЕЛКА ============ -->
+<div class="page active" id="page-deal">
   <label>Юрист</label>
-  <select id="jurist">
-    <option>Магомедов М.Я.</option>
-    <option>Магомедов М. Р.</option>
-    <option>Ахвердян Э.А.</option>
-    <option>Каспаров О.А.</option>
-    <option>Пикалова Е.С.</option>
-    <option>Васильченко В.В.</option>
-    <option>Жовтый А.А.</option>
-    <option>Елизавета Шевченко</option>
-  </select>
+  <select id="d-jurist" class="jurist-select"></select>
 
   <label>Тип сделки</label>
   <div class="cats" id="cats">
@@ -83,102 +132,314 @@
   </div>
 
   <label>Дата</label>
-  <input type="date" id="date">
+  <input type="date" id="d-date">
 
-  <div id="f-client">
-    <label>Клиент (фамилия)</label>
-    <input type="text" id="client" placeholder="Кувшинова">
-  </div>
+  <div id="f-client"><label>Клиент (фамилия)</label>
+    <input type="text" id="d-client" placeholder="Кувшинова"></div>
 
-  <div id="f-contract">
-    <label>Номер договора</label>
-    <input type="text" id="contract" placeholder="1507-01/25 (можно оставить пустым)">
-  </div>
+  <div id="f-contract"><label>Номер договора</label>
+    <input type="text" id="d-contract" placeholder="1507-01/25 (необязательно)"></div>
 
-  <div id="f-condition" class="hidden">
-    <label>Условие ГУ</label>
-    <input type="text" id="condition" placeholder="Взыскание (необязательно)">
-  </div>
+  <div id="f-condition" class="hidden"><label>Условие ГУ</label>
+    <input type="text" id="d-condition" placeholder="Взыскание (необязательно)"></div>
 
-  <div id="f-platform" class="hidden">
-    <label>Платформа отзыва</label>
-    <select id="platform">
+  <div id="f-platform" class="hidden"><label>Платформа отзыва</label>
+    <select id="d-platform">
       <option>Яндекс</option><option>2гис</option><option>Yell</option>
       <option>Отзовик</option><option>Авито</option><option>Zoon</option><option>Профи</option>
-    </select>
-  </div>
+    </select></div>
 
-  <div id="f-expense-type" class="hidden">
-    <label>Тип расхода</label>
-    <select id="expense_type">
+  <div id="f-expense-type" class="hidden"><label>Тип расхода</label>
+    <select id="d-expense-type">
       <option>Почта</option><option>Госпошлина</option><option>Транспорт</option><option>Иные</option>
-    </select>
-  </div>
+    </select></div>
 
-  <div id="f-comment" class="hidden">
-    <label>Комментарий</label>
-    <input type="text" id="comment" placeholder="Отправка иска (необязательно)">
-  </div>
+  <div id="f-comment" class="hidden"><label>Комментарий</label>
+    <input type="text" id="d-comment" placeholder="Отправка иска (необязательно)"></div>
 
   <label>Сумма, ₽</label>
-  <input type="number" id="amount" inputmode="numeric" placeholder="150000">
+  <input type="number" id="d-amount" inputmode="numeric" placeholder="150000">
   <div class="hint" id="amount-hint"></div>
+</div>
+
+<!-- ============ ОТЧЁТ ============ -->
+<div class="page" id="page-report">
+  <label>Юрист</label>
+  <select id="r-jurist" class="jurist-select"></select>
+
+  <label>Период</label>
+  <div class="chips">
+    <div class="chip active" id="chip-this">Эта неделя</div>
+    <div class="chip" id="chip-prev">Прошлая неделя</div>
+  </div>
+  <div class="row">
+    <div><label style="margin-top:4px">Начало</label><input type="date" id="r-start"></div>
+    <div><label style="margin-top:4px">Конец</label><input type="date" id="r-end"></div>
+  </div>
+
+  <div style="height:14px"></div>
+  <div id="report-sections"></div>
+
+  <details class="card">
+    <summary>🎯 План <span class="badge" id="badge-plan"></span><span class="chev">▶</span></summary>
+    <div class="body">
+      <div class="row">
+        <div><label>Текущий план, ₽</label><input type="number" inputmode="numeric" id="plan_current" placeholder="0"></div>
+        <div><label>Предыдущий план, ₽</label><input type="number" inputmode="numeric" id="plan_previous" placeholder="0"></div>
+      </div>
+    </div>
+  </details>
+</div>
+
+<!-- ============ АДМИН ============ -->
+<div class="page" id="page-admin">
+  <div id="admin-content">
+    <div class="admin-card">
+      <h3>📥 Отчёт Excel</h3>
+      <p>Сводный отчёт по всем юристам за месяц (или отдельную неделю)</p>
+      <label>Месяц</label>
+      <input type="month" id="a-report-month">
+      <div class="row">
+        <div><label>Неделя с (необязательно)</label><input type="date" id="a-report-ws"></div>
+        <div><label>по</label><input type="date" id="a-report-we"></div>
+      </div>
+      <button class="btn" data-action="export_report">Выгрузить отчёт</button>
+    </div>
+
+    <div class="admin-card">
+      <h3>💰 Зарплатная таблица</h3>
+      <p>Excel в формате «Отчет ежемесячный» — лист на каждый месяц со сделками</p>
+      <label>Юрист</label>
+      <select id="a-salary-jurist" class="jurist-select"></select>
+      <label>Год</label>
+      <input type="number" id="a-salary-year" inputmode="numeric">
+      <button class="btn" data-action="export_salary">Выгрузить таблицу</button>
+    </div>
+
+    <div class="admin-card">
+      <h3>📋 Сделки за месяц</h3>
+      <p>Список сделок юриста с номерами и итогом</p>
+      <label>Юрист</label>
+      <select id="a-deals-jurist" class="jurist-select"></select>
+      <label>Месяц</label>
+      <input type="month" id="a-deals-month">
+      <button class="btn" data-action="list_deals">Показать сделки</button>
+    </div>
+
+    <div class="admin-card">
+      <h3>🗑 Удалить сделку</h3>
+      <p>Номер берётся из списка «Сделки за месяц»</p>
+      <label>Номер сделки</label>
+      <input type="number" id="a-del-deal" inputmode="numeric" placeholder="15">
+      <button class="btn danger" data-action="delete_deal">Удалить сделку</button>
+    </div>
+
+    <div class="admin-card">
+      <h3>🗑 Удалить отчёты юриста</h3>
+      <p>Удаляет отчёты за период (для перезаполнения)</p>
+      <label>Юрист</label>
+      <select id="a-del-jurist" class="jurist-select"></select>
+      <div class="row">
+        <div><label>С</label><input type="date" id="a-del-start"></div>
+        <div><label>По</label><input type="date" id="a-del-end"></div>
+      </div>
+      <button class="btn danger" data-action="delete_reports">Удалить отчёты</button>
+    </div>
+  </div>
+</div>
 
 <script>
   const tg = window.Telegram.WebApp;
-  tg.ready();
-  tg.expand();
+  tg.ready(); tg.expand();
 
-  document.getElementById('date').value = new Date().toISOString().slice(0, 10);
+  const ADMIN_IDS = [243815412, 288216743];
+  const JURISTS = [
+    'Магомедов М.Я.', 'Магомедов М. Р.', 'Ахвердян Э.А.', 'Каспаров О.А.',
+    'Пикалова Е.С.', 'Васильченко В.В.', 'Жовтый А.А.', 'Елизавета Шевченко',
+  ];
+  const val = id => document.getElementById(id).value.trim();
+  const num = id => parseInt((val(id) || '0').replace(/\s/g, ''), 10) || 0;
+  const iso = d => d.toISOString().slice(0, 10);
 
+  // Заполнить все селекты юристов
+  document.querySelectorAll('.jurist-select').forEach(sel => {
+    JURISTS.forEach(j => sel.add(new Option(j, j)));
+  });
+
+  // Админ-вкладка только для разрешённых ID (сервер проверяет ещё раз)
+  const userId = tg.initDataUnsafe?.user?.id;
+  if (ADMIN_IDS.includes(userId)) document.getElementById('admin-tab').classList.remove('hidden');
+
+  // ---------- Вкладки ----------
+  let page = 'deal';
+  function switchPage(p) {
+    page = p;
+    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.page === p));
+    document.querySelectorAll('.page').forEach(el => el.classList.toggle('active', el.id === 'page-' + p));
+    if (p === 'deal') { tg.MainButton.setText('✅ Сохранить сделку'); tg.MainButton.show(); }
+    else if (p === 'report') { tg.MainButton.setText('📊 Отправить отчёт'); tg.MainButton.show(); }
+    else tg.MainButton.hide();
+    tg.HapticFeedback?.selectionChanged();
+  }
+  document.getElementById('tabs').addEventListener('click', e => {
+    if (e.target.dataset.page) switchPage(e.target.dataset.page);
+  });
+
+  // ---------- Сделка ----------
+  document.getElementById('d-date').value = iso(new Date());
   let category = 'court';
   const show = (id, on) => document.getElementById(id).classList.toggle('hidden', !on);
-
   function applyCategory(cat) {
     category = cat;
-    document.querySelectorAll('.cat').forEach(el =>
-      el.classList.toggle('active', el.dataset.cat === cat));
+    document.querySelectorAll('.cat').forEach(el => el.classList.toggle('active', el.dataset.cat === cat));
     show('f-client', cat !== 'expense');
     show('f-contract', ['court', 'sale', 'add_sale'].includes(cat));
     show('f-condition', cat === 'gu');
     show('f-platform', cat === 'review');
     show('f-expense-type', cat === 'expense');
     show('f-comment', cat === 'expense');
-    const amount = document.getElementById('amount');
+    const amount = document.getElementById('d-amount');
     if (cat === 'review' && !amount.value) amount.value = 1000;
-    document.getElementById('amount-hint').textContent =
-      cat === 'review' ? 'Обычно 1000 ₽ за отзыв' : '';
+    document.getElementById('amount-hint').textContent = cat === 'review' ? 'Обычно 1000 ₽ за отзыв' : '';
   }
-
   document.getElementById('cats').addEventListener('click', e => {
-    if (e.target.dataset.cat) applyCategory(e.target.dataset.cat);
+    if (e.target.dataset.cat) { applyCategory(e.target.dataset.cat); tg.HapticFeedback?.selectionChanged(); }
   });
 
+  function sendDeal() {
+    const amount = num('d-amount');
+    if (category !== 'expense' && !val('d-client')) { tg.showAlert('Укажите фамилию клиента'); return; }
+    if (!amount || amount <= 0) { tg.showAlert('Укажите сумму'); return; }
+    tg.sendData(JSON.stringify({
+      kind: 'deal', jurist: val('d-jurist'), category, date: val('d-date'),
+      client: val('d-client'), contract: val('d-contract'),
+      condition: category === 'expense' ? val('d-expense-type') : val('d-condition'),
+      platform: category === 'review' ? val('d-platform') : '',
+      comment: val('d-comment'), amount,
+    }));
+  }
+
+  // ---------- Отчёт ----------
+  // Секции категорий генерируются из конфига
+  const SECTIONS = [
+    { key: 'cd', title: '📁 Закрытые договоры', success: true, amount: true },
+    { key: 'rs', title: '🔁 Повторные продажи', amount: true },
+    { key: 'as', title: '➕ Доп. продажи', amount: true },
+    { key: 'gu', title: '🏆 Гонорар успеха', amount: true },
+    { key: 'rev', title: '⭐ Отзывы' },
+  ];
+  const fld = (id, label, ph) =>
+    `<div><label>${label}</label><input type="number" inputmode="numeric" id="${id}" placeholder="${ph || 0}"></div>`;
+  const txt = (id, label, ph) =>
+    `<label>${label}</label><input type="text" id="${id}" placeholder="${ph}">`;
+
+  document.getElementById('report-sections').innerHTML = SECTIONS.map(s => `
+    <details class="card">
+      <summary>${s.title} <span class="badge" id="badge-${s.key}"></span><span class="chev">▶</span></summary>
+      <div class="body">
+        <div class="row${s.success ? '3' : ''}">
+          ${fld(s.key + '_current', 'Текущая')}
+          ${s.success ? fld(s.key + '_current_success', 'Успех (тек.)') : ''}
+          ${s.success ? '' : fld(s.key + '_future', 'Будущая')}
+          ${s.success ? fld(s.key + '_future', 'Будущая') : ''}
+        </div>
+        <div class="row${s.success ? '3' : ''}">
+          ${fld(s.key + '_month', 'Месяц (всего)')}
+          ${s.success ? fld(s.key + '_month_success', 'Успех (мес.)') : ''}
+          ${s.amount ? fld(s.key + '_amount', 'Сумма, ₽', '0') : '<div></div>'}
+        </div>
+        ${txt(s.key + '_clients', 'Клиенты', 'Иванов, Петров')}
+        ${txt(s.key + '_future_clients', 'Потенциальные клиенты', 'Сидоров')}
+      </div>
+    </details>`).join('');
+
+  // Бейджи с количеством в заголовке секции
+  document.getElementById('page-report').addEventListener('input', () => {
+    SECTIONS.forEach(s => {
+      const m = num(s.key + '_month');
+      const a = s.amount ? num(s.key + '_amount') : 0;
+      document.getElementById('badge-' + s.key).textContent =
+        m || a ? `${m} шт.${a ? ' · ' + a.toLocaleString('ru') + ' ₽' : ''}` : '';
+    });
+    const p = num('plan_current');
+    document.getElementById('badge-plan').textContent = p ? p.toLocaleString('ru') + ' ₽' : '';
+  });
+
+  // Недели
+  function setWeek(offset) {
+    const now = new Date();
+    const monday = new Date(now);
+    monday.setDate(now.getDate() - ((now.getDay() + 6) % 7) + offset * 7);
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+    document.getElementById('r-start').value = iso(monday);
+    document.getElementById('r-end').value = iso(sunday);
+  }
+  setWeek(0);
+  document.getElementById('chip-this').onclick = () => { setWeek(0); toggleChip('chip-this'); };
+  document.getElementById('chip-prev').onclick = () => { setWeek(-1); toggleChip('chip-prev'); };
+  function toggleChip(id) {
+    ['chip-this', 'chip-prev'].forEach(c =>
+      document.getElementById(c).classList.toggle('active', c === id));
+  }
+
+  function sendReport() {
+    if (!val('r-start') || !val('r-end')) { tg.showAlert('Укажите период отчёта'); return; }
+    const sec = k => ({
+      current: num(k + '_current'), future: num(k + '_future'),
+      month: num(k + '_month'), amount: num(k + '_amount'),
+      clients: val(k + '_clients'), future_clients: val(k + '_future_clients'),
+    });
+    const cd = sec('cd');
+    cd.current_success = num('cd_current_success');
+    cd.month_success = num('cd_month_success');
+    tg.sendData(JSON.stringify({
+      kind: 'report', jurist: val('r-jurist'),
+      date_start: val('r-start'), date_end: val('r-end'),
+      cd, rs: sec('rs'), as: sec('as'), gu: sec('gu'), rev: sec('rev'),
+      plan_current: num('plan_current'), plan_previous: num('plan_previous'),
+    }));
+  }
+
+  // ---------- Админ ----------
+  const now = new Date();
+  document.getElementById('a-report-month').value = iso(now).slice(0, 7);
+  document.getElementById('a-deals-month').value = iso(now).slice(0, 7);
+  document.getElementById('a-salary-year').value = now.getFullYear();
+
+  document.getElementById('page-admin').addEventListener('click', e => {
+    const action = e.target.dataset?.action;
+    if (!action) return;
+    const payload = { kind: 'admin', action };
+    if (action === 'export_report') {
+      if (!val('a-report-month')) { tg.showAlert('Укажите месяц'); return; }
+      payload.month = val('a-report-month');
+      payload.week_start = val('a-report-ws');
+      payload.week_end = val('a-report-we');
+    } else if (action === 'export_salary') {
+      payload.jurist = val('a-salary-jurist');
+      payload.year = num('a-salary-year');
+    } else if (action === 'list_deals') {
+      payload.jurist = val('a-deals-jurist');
+      payload.month = val('a-deals-month');
+    } else if (action === 'delete_deal') {
+      if (!num('a-del-deal')) { tg.showAlert('Укажите номер сделки'); return; }
+      payload.deal_id = num('a-del-deal');
+    } else if (action === 'delete_reports') {
+      if (!val('a-del-start') || !val('a-del-end')) { tg.showAlert('Укажите период'); return; }
+      payload.jurist = val('a-del-jurist');
+      payload.date_start = val('a-del-start');
+      payload.date_end = val('a-del-end');
+    }
+    tg.sendData(JSON.stringify(payload));
+  });
+
+  // ---------- MainButton ----------
   tg.MainButton.setText('✅ Сохранить сделку');
   tg.MainButton.show();
   tg.MainButton.onClick(() => {
-    const val = id => document.getElementById(id).value.trim();
-    const amount = parseInt(val('amount').replace(/\s/g, ''), 10);
-
-    if (category !== 'expense' && !val('client')) {
-      tg.showAlert('Укажите фамилию клиента'); return;
-    }
-    if (!amount || amount <= 0) {
-      tg.showAlert('Укажите сумму'); return;
-    }
-
-    tg.sendData(JSON.stringify({
-      kind: 'deal',
-      jurist: val('jurist'),
-      category: category,
-      date: val('date'),
-      client: val('client'),
-      contract: val('contract'),
-      condition: category === 'expense' ? val('expense_type') : val('condition'),
-      platform: category === 'review' ? val('platform') : '',
-      comment: val('comment'),
-      amount: amount,
-    }));
+    if (page === 'deal') sendDeal();
+    else if (page === 'report') sendReport();
   });
 </script>
 </body>

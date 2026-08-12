@@ -157,9 +157,18 @@
   <div id="f-comment" class="hidden"><label>Комментарий</label>
     <input type="text" id="d-comment" placeholder="Отправка иска (необязательно)"></div>
 
-  <label>Сумма, ₽</label>
-  <input type="number" id="d-amount" inputmode="numeric" placeholder="150000">
+  <div class="row">
+    <div>
+      <label>Сумма, ₽</label>
+      <input type="number" id="d-amount" inputmode="numeric" placeholder="150000">
+    </div>
+    <div id="f-percent">
+      <label>Процент, %</label>
+      <input type="number" id="d-percent" inputmode="numeric" value="10" min="0" max="100">
+    </div>
+  </div>
   <div class="hint" id="amount-hint"></div>
+  <div class="hint" id="percent-hint"></div>
 </div>
 
 <!-- ============ ОТЧЁТ ============ -->
@@ -301,7 +310,20 @@
     const amount = document.getElementById('d-amount');
     if (cat === 'review' && !amount.value) amount.value = 1000;
     document.getElementById('amount-hint').textContent = cat === 'review' ? 'Обычно 1000 ₽ за отзыв' : '';
+    // Процент только там, где идёт начисление от суммы
+    show('f-percent', ['court', 'sale', 'add_sale', 'gu'].includes(cat));
+    updatePercentHint();
   }
+
+  function updatePercentHint() {
+    const a = num('d-amount'), p = num('d-percent');
+    document.getElementById('percent-hint').textContent =
+      (a && p && ['court', 'sale', 'add_sale', 'gu'].includes(category))
+        ? `Начисление юристу: ${Math.round(a * p / 100).toLocaleString('ru')} ₽`
+        : '';
+  }
+  document.getElementById('d-amount').addEventListener('input', updatePercentHint);
+  document.getElementById('d-percent').addEventListener('input', updatePercentHint);
   document.getElementById('cats').addEventListener('click', e => {
     if (e.target.dataset.cat) { applyCategory(e.target.dataset.cat); tg.HapticFeedback?.selectionChanged(); }
   });
@@ -316,6 +338,7 @@
       condition: category === 'expense' ? val('d-expense-type') : val('d-condition'),
       platform: category === 'review' ? val('d-platform') : '',
       comment: val('d-comment'), amount,
+      percent: ['court', 'sale', 'add_sale', 'gu'].includes(category) ? num('d-percent') : 0,
     }));
   }
 

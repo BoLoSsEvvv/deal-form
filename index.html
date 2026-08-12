@@ -167,6 +167,12 @@
       <input type="number" id="d-percent" inputmode="numeric" value="10" min="0" max="100">
     </div>
   </div>
+  <div class="chips" id="percent-chips" style="margin-top:8px">
+    <div class="chip" data-p="5">5%</div>
+    <div class="chip active" data-p="10">10%</div>
+    <div class="chip" data-p="15">15%</div>
+    <div class="chip" data-p="20">20%</div>
+  </div>
   <div class="hint" id="amount-hint"></div>
   <div class="hint" id="percent-hint"></div>
 </div>
@@ -311,9 +317,25 @@
     if (cat === 'review' && !amount.value) amount.value = 1000;
     document.getElementById('amount-hint').textContent = cat === 'review' ? 'Обычно 1000 ₽ за отзыв' : '';
     // Процент только там, где идёт начисление от суммы
-    show('f-percent', ['court', 'sale', 'add_sale', 'gu'].includes(cat));
+    const hasPercent = ['court', 'sale', 'add_sale', 'gu'].includes(cat);
+    show('f-percent', hasPercent);
+    show('percent-chips', hasPercent);
     updatePercentHint();
   }
+
+  document.getElementById('percent-chips').addEventListener('click', e => {
+    const p = e.target.dataset?.p;
+    if (!p) return;
+    document.getElementById('d-percent').value = p;
+    document.querySelectorAll('#percent-chips .chip').forEach(c =>
+      c.classList.toggle('active', c.dataset.p === p));
+    updatePercentHint();
+    tg.HapticFeedback?.selectionChanged();
+  });
+  document.getElementById('d-percent').addEventListener('input', () => {
+    document.querySelectorAll('#percent-chips .chip').forEach(c =>
+      c.classList.toggle('active', c.dataset.p === val('d-percent')));
+  });
 
   function updatePercentHint() {
     const a = num('d-amount'), p = num('d-percent');

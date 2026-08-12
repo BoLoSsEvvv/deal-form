@@ -281,9 +281,9 @@
     JURISTS.forEach(j => sel.add(new Option(j, j)));
   });
 
-  // Админ-вкладка только для разрешённых ID (сервер проверяет ещё раз)
+  // Админ-вкладка временно отключена. Вернуть: раскомментировать строку ниже.
   const userId = tg.initDataUnsafe?.user?.id;
-  if (ADMIN_IDS.includes(userId)) document.getElementById('admin-tab').classList.remove('hidden');
+  // if (ADMIN_IDS.includes(userId)) document.getElementById('admin-tab').classList.remove('hidden');
 
   // ---------- Вкладки ----------
   let page = 'deal';

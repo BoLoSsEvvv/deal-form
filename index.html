@@ -286,7 +286,10 @@
   </div>
 </div>
 
+<div class="hint" id="diag" style="text-align:center; margin-top:18px"></div>
+
 <script>
+  const FORM_VERSION = 6;
   const tg = window.Telegram.WebApp;
   tg.ready(); tg.expand();
 
@@ -309,8 +312,14 @@
     JURISTS.forEach(j => sel.add(new Option(j, j)));
   });
 
+  // Админ-вкладка: по флагу из URL (его ставит бот для админов) или по id из Telegram.
+  // Бэкенд в любом случае проверяет id отправителя, так что флаг в URL безопасен.
   const userId = tg.initDataUnsafe?.user?.id;
-  if (ADMIN_IDS.includes(userId)) document.getElementById('admin-tab').classList.remove('hidden');
+  const isAdmin = new URLSearchParams(location.search).get('admin') === '1'
+    || ADMIN_IDS.includes(userId);
+  if (isAdmin) document.getElementById('admin-tab').classList.remove('hidden');
+  document.getElementById('diag').textContent =
+    `v${FORM_VERSION} · ID: ${userId ?? 'не передан'}${isAdmin ? ' · админ' : ''}`;
 
   // ---------- Вкладки ----------
   let page = 'deal';

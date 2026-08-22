@@ -150,13 +150,13 @@
   <input type="date" id="d-date">
 
   <div id="f-client"><label>Клиент (фамилия)</label>
-    <input type="text" id="d-client" placeholder="Кувшинова"></div>
+    <input type="text" id="d-client"></div>
 
   <div id="f-contract"><label>Номер договора</label>
-    <input type="text" id="d-contract" placeholder="1507-01/25"></div>
+    <input type="text" id="d-contract"></div>
 
   <div id="f-condition" class="hidden"><label>Условие ГУ</label>
-    <input type="text" id="d-condition" placeholder="Взыскание"></div>
+    <input type="text" id="d-condition"></div>
 
   <div id="f-weekly" class="hidden">
     <label class="checkline">
@@ -178,12 +178,12 @@
     </select></div>
 
   <div id="f-comment" class="hidden"><label>Комментарий</label>
-    <input type="text" id="d-comment" placeholder="Отправка иска"></div>
+    <input type="text" id="d-comment"></div>
 
   <div class="row">
     <div>
       <label>Сумма, ₽</label>
-      <input type="number" id="d-amount" inputmode="numeric" placeholder="150000">
+      <input type="number" id="d-amount" inputmode="numeric">
     </div>
     <div id="f-percent">
       <label>Процент, %</label>
@@ -222,8 +222,8 @@
     <summary>🎯 План <span class="badge" id="badge-plan"></span><span class="chev">▶</span></summary>
     <div class="body">
       <div class="row">
-        <div><label>Текущий план, ₽</label><input type="number" inputmode="numeric" id="plan_current" placeholder="0"></div>
-        <div><label>Предыдущий план, ₽</label><input type="number" inputmode="numeric" id="plan_previous" placeholder="0"></div>
+        <div><label>Текущий план, ₽</label><input type="number" inputmode="numeric" id="plan_current"></div>
+        <div><label>Предыдущий план, ₽</label><input type="number" inputmode="numeric" id="plan_previous"></div>
       </div>
     </div>
   </details>
@@ -268,7 +268,7 @@
       <h3>🗑 Удалить сделку</h3>
       <p>Номер берётся из списка «Сделки за месяц»</p>
       <label>Номер сделки</label>
-      <input type="number" id="a-del-deal" inputmode="numeric" placeholder="15">
+      <input type="number" id="a-del-deal" inputmode="numeric">
       <button class="btn danger" data-action="delete_deal">Удалить сделку</button>
     </div>
 
@@ -289,7 +289,7 @@
 <div class="hint" id="diag" style="text-align:center; margin-top:18px"></div>
 
 <script>
-  const FORM_VERSION = 6;
+  const FORM_VERSION = 7;
   const tg = window.Telegram.WebApp;
   tg.ready(); tg.expand();
 
@@ -412,9 +412,9 @@
     { key: 'rev', title: '⭐ Отзывы' },
   ];
   const fld = (id, label, ph) =>
-    `<div><label>${label}</label><input type="number" inputmode="numeric" id="${id}" placeholder="${ph || 0}"></div>`;
+    `<div><label>${label}</label><input type="number" inputmode="numeric" id="${id}"></div>`;
   const txt = (id, label, ph) =>
-    `<label>${label}</label><input type="text" id="${id}" placeholder="${ph}">`;
+    `<label>${label}</label><input type="text" id="${id}">`;
 
   document.getElementById('report-sections').innerHTML = SECTIONS.map(s => `
     <details class="card">

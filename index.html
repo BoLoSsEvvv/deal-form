@@ -289,7 +289,7 @@
 <div class="hint" id="diag" style="text-align:center; margin-top:18px"></div>
 
 <script>
-  const FORM_VERSION = 8;
+  const FORM_VERSION = 9;
   const tg = window.Telegram.WebApp;
   tg.ready(); tg.expand();
 
@@ -297,6 +297,7 @@
   const JURISTS = [
     'Магомедов М.Я.', 'Магомедов М. Р.', 'Ахвердян Э.А.', 'Каспаров О.А.',
     'Пикалова Е.С.', 'Васильченко В.В.', 'Жовтый А.А.', 'Елизавета Шевченко',
+    'тест', // временный юрист для проверки формы
   ];
   // Null-safe: у некоторых секций отчёта нет поля суммы (напр. rev_amount)
   const val = id => (document.getElementById(id)?.value ?? '').trim();

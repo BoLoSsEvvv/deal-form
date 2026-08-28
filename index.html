@@ -289,7 +289,7 @@
 <div class="hint" id="diag" style="text-align:center; margin-top:18px"></div>
 
 <script>
-  const FORM_VERSION = 7;
+  const FORM_VERSION = 8;
   const tg = window.Telegram.WebApp;
   tg.ready(); tg.expand();
 
@@ -298,7 +298,8 @@
     'Магомедов М.Я.', 'Магомедов М. Р.', 'Ахвердян Э.А.', 'Каспаров О.А.',
     'Пикалова Е.С.', 'Васильченко В.В.', 'Жовтый А.А.', 'Елизавета Шевченко',
   ];
-  const val = id => document.getElementById(id).value.trim();
+  // Null-safe: у некоторых секций отчёта нет поля суммы (напр. rev_amount)
+  const val = id => (document.getElementById(id)?.value ?? '').trim();
   const num = id => parseInt((val(id) || '0').replace(/\s/g, ''), 10) || 0;
   const pct = id => parseFloat((val(id) || '0').replace(',', '.')) || 0;
   const iso = d => d.toISOString().slice(0, 10);

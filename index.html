@@ -289,7 +289,7 @@
 <div class="hint" id="diag" style="text-align:center; margin-top:18px"></div>
 
 <script>
-  const FORM_VERSION = 12;
+  const FORM_VERSION = 13;
   const tg = window.Telegram.WebApp;
   tg.ready(); tg.expand();
 
@@ -309,10 +309,39 @@
   const CONTRACT_CATS = ['court', 'court_loss', 'sale', 'add_sale', 'surcharge'];
   const PERCENT_CATS = ['court', 'court_loss', 'sale', 'add_sale', 'surcharge', 'gu'];
 
-  // Заполнить все селекты юристов
+  // Заполнить все селекты юристов; по умолчанию — прочерк, чтобы не отправить чужое имя
   document.querySelectorAll('.jurist-select').forEach(sel => {
+    const ph = new Option('—', '', true, true);
+    ph.disabled = true;
+    sel.add(ph);
     JURISTS.forEach(j => sel.add(new Option(j, j)));
   });
+
+  // Запоминаем «своего» юриста для вкладок Сделка/Отчёт: Telegram CloudStorage
+  // (привязан к аккаунту, общий для всех устройств) + localStorage как быстрый фолбэк.
+  const JURIST_KEY = 'deal_form_jurist';
+  const OWN_JURIST_SELECTS = ['d-jurist', 'r-jurist'];
+  const hasCloud = !!tg.CloudStorage && tg.isVersionAtLeast?.('6.9');
+  let juristTouched = false;
+  function setOwnJurist(name) {
+    if (!JURISTS.includes(name)) return;
+    OWN_JURIST_SELECTS.forEach(id => { document.getElementById(id).value = name; });
+  }
+  function saveOwnJurist(name) {
+    try { localStorage.setItem(JURIST_KEY, name); } catch (e) {}
+    if (hasCloud) tg.CloudStorage.setItem(JURIST_KEY, name);
+  }
+  try { setOwnJurist(localStorage.getItem(JURIST_KEY)); } catch (e) {}
+  if (hasCloud) {
+    tg.CloudStorage.getItem(JURIST_KEY, (err, name) => {
+      if (!err && name && !juristTouched) setOwnJurist(name);
+    });
+  }
+  OWN_JURIST_SELECTS.forEach(id => document.getElementById(id).addEventListener('change', e => {
+    juristTouched = true;
+    setOwnJurist(e.target.value);
+    saveOwnJurist(e.target.value);
+  }));
 
   // Админ-вкладка: по флагу из URL (его ставит бот для админов) или по id из Telegram.
   // Бэкенд в любом случае проверяет id отправителя, так что флаг в URL безопасен.
@@ -391,6 +420,7 @@
 
   function sendDeal() {
     const amount = num('d-amount');
+    if (!val('d-jurist')) { tg.showAlert('Выберите юриста'); return; }
     if (category !== 'expense' && !val('d-client')) { tg.showAlert('Укажите фамилию клиента'); return; }
     if (!amount || amount <= 0) { tg.showAlert('Укажите сумму'); return; }
     tg.sendData(JSON.stringify({
@@ -469,6 +499,7 @@
   }
 
   function sendReport() {
+    if (!val('r-jurist')) { tg.showAlert('Выберите юриста'); return; }
     if (!val('r-start') || !val('r-end')) { tg.showAlert('Укажите период отчёта'); return; }
     const sec = k => ({
       current: num(k + '_current'), future: num(k + '_future'),
@@ -502,15 +533,18 @@
       payload.week_start = val('a-report-ws');
       payload.week_end = val('a-report-we');
     } else if (action === 'export_salary') {
+      if (!val('a-salary-jurist')) { tg.showAlert('Выберите юриста'); return; }
       payload.jurist = val('a-salary-jurist');
       payload.year = num('a-salary-year');
     } else if (action === 'list_deals') {
+      if (!val('a-deals-jurist')) { tg.showAlert('Выберите юриста'); return; }
       payload.jurist = val('a-deals-jurist');
       payload.month = val('a-deals-month');
     } else if (action === 'delete_deal') {
       if (!num('a-del-deal')) { tg.showAlert('Укажите номер сделки'); return; }
       payload.deal_id = num('a-del-deal');
     } else if (action === 'delete_reports') {
+      if (!val('a-del-jurist')) { tg.showAlert('Выберите юриста'); return; }
       if (!val('a-del-start') || !val('a-del-end')) { tg.showAlert('Укажите период'); return; }
       payload.jurist = val('a-del-jurist');
       payload.date_start = val('a-del-start');
